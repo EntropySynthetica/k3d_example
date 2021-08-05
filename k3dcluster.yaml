@@ -1,0 +1,39 @@
+apiVersion: k3d.io/v1alpha2
+kind: Simple 
+name: locallab
+servers: 1 # Number of Control Plane Nodes
+agents: 0 # Number of Worker Nodes
+kubeAPI: 
+  hostIP: "127.0.0.1" # where the Kubernetes API will be listening on
+  hostPort: "6443" # where the Kubernetes API listening port will be mapped to on your host system
+image: rancher/k3s:v1.21.1-k3s1
+
+ports:
+  - port: 80:80 # map external port 80 to port 80 on the load balancer
+    nodeFilters:
+      - loadbalancer
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+  - port: 30000-30010:30000-30010  # Expose Node Ports 30000 to 30010.  There may be a large delay starting the cluster if you expose lots of ports.
+    nodeFilters:
+      - server[0]
+
+options:
+  k3d: # k3d runtime settings
+    wait: true # wait for cluster to be usable before returning; same as `--wait` (default: true)
+    timeout: "60s" # wait timeout before aborting; same as `--timeout 60s`
+    disableLoadbalancer: false # same as `--no-lb`
+    disableImageVolume: false # same as `--no-image-volume`
+    disableRollback: false # same as `--no-Rollback`
+    disableHostIPInjection: false # same as `--no-hostip`
+
+  # Uncomment this in order to enable Nginx as a Ingress Controller. 
+  k3s: # options passed on to K3s itself
+    extraServerArgs: # additional arguments passed to the `k3s server` command; same as `--k3s-server-arg`
+      - --no-deploy=traefik
+    extraAgentArgs: [] # additional arguments passed to the `k3s agent` command; same as `--k3s-agent-arg`
+
+  kubeconfig:
+    updateDefaultKubeconfig: false
+    switchCurrentContext: false 
